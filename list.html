@@ -16,10 +16,102 @@
         }
         .delete-btn:hover { background: #ffeeee; }
         .empty-row td { text-align: center; color: #98a9bb; padding: 3rem; font-style: italic; }
+
+        /* 迭代 5：汇总栏样式 */
+        .summary-bar {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            background: #f2f6fc;
+            padding: 0.7rem 1.5rem;
+            border-radius: 40px;
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+        }
+        .summary-bar strong { color: #0f2b44; margin-right: 0.3rem; }
+        .summary-income  { color: #1e7b4f; font-weight: 600; }
+        .summary-expense { color: #b33a3a; font-weight: 600; }
+        .summary-balance { font-weight: 600; }
+
+        /* 迭代 6：筛选区样式 */
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: center;
+            background: #fafdff;
+            padding: 1rem 1.2rem;
+            border-radius: 1.5rem;
+            border: 1px solid #dde5ef;
+            margin-bottom: 1.2rem;
+        }
+        .filter-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #fff;
+            padding: 0.3rem 0.9rem;
+            border-radius: 2rem;
+            border: 1px solid #cfdbe9;
+        }
+        .filter-item label { font-size: 0.85rem; color: #3c5a7a; font-weight: 500; }
+        .filter-item input,
+        .filter-item select {
+            border: none; background: transparent; outline: none;
+            font-size: 0.95rem; padding: 0.4rem 0.2rem; color: #0a1c2c;
+        }
+        .filter-btn {
+            border: none; background: #1d3e62; color: #fff;
+            padding: 0.55rem 1.4rem; border-radius: 2rem;
+            font-size: 0.9rem; cursor: pointer;
+        }
+        .filter-btn.ghost {
+            background: #fff; color: #1d3e62; border: 1px solid #b9c9db;
+        }
+        .filter-btn:hover { opacity: 0.9; }
     </style>
 </head>
 <body>
     <h1>📒 收支记录列表</h1>
+
+    <!-- 迭代 5：顶部收支汇总 -->
+    <div class="summary-bar">
+        <div><strong>总收入：</strong><span id="totalIncome" class="summary-income">¥0.00</span></div>
+        <div><strong>总支出：</strong><span id="totalExpense" class="summary-expense">¥0.00</span></div>
+        <div><strong>结余：</strong><span id="balance" class="summary-balance">¥0.00</span></div>
+    </div>
+
+    <!-- 迭代 6：筛选区 -->
+    <div class="filters">
+        <div class="filter-item">
+            <label>📅 日期</label>
+            <input type="date" id="filterDate">
+        </div>
+        <div class="filter-item">
+            <label>🏷️ 类别</label>
+            <select id="filterCategory">
+                <option value="">全部类别</option>
+                <option value="饮食">饮食</option>
+                <option value="交通">交通</option>
+                <option value="工资">工资</option>
+                <option value="购物">购物</option>
+                <option value="娱乐">娱乐</option>
+                <option value="其他">其他</option>
+            </select>
+        </div>
+        <div class="filter-item">
+            <label>💰 金额</label>
+            <select id="filterAmountType">
+                <option value="all">全部金额</option>
+                <option value="gt100">大于 100</option>
+                <option value="lt50">小于 50</option>
+                <option value="between">50 ~ 100</option>
+            </select>
+        </div>
+        <button class="filter-btn" id="applyFilterBtn">筛选</button>
+        <button class="filter-btn ghost" id="resetFiltersBtn">重置</button>
+    </div>
+
     <table>
         <thead>
             <tr><th>日期</th><th>金额 (¥)</th><th>类别</th><th>备注</th><th>操作</th></tr>
@@ -29,17 +121,30 @@
 
     <script>
         const STORAGE_KEY = 'account_book_records';
+        const SEED_VERSION = 'v2';
+        const VERSION_KEY = 'account_book_seed_version';
 
         const seedRecords = [
-            { id: 'r1', date: '2026-11-06', amount: -18.50, category: '饮食', note: '午餐外卖' },
-            { id: 'r2', date: '2026-11-06', amount: 4200.00, category: '工资', note: '10月工资' },
-            { id: 'r3', date: '2026-11-05', amount: -15.00, category: '交通', note: '地铁充值' },
-            { id: 'r4', date: '2026-11-05', amount: -189.90, category: '购物', note: '电商零食' },
-            { id: 'r5', date: '2026-11-04', amount: -45.00, category: '饮食', note: '晚餐聚餐' },
-            { id: 'r6', date: '2026-11-04', amount: 800.00, category: '其他', note: '转账收入' }
+            { id: 'r1',  date: '2026-11-06', amount: -18.50,  category: '饮食', note: '午餐外卖' },
+            { id: 'r2',  date: '2026-11-06', amount: 4200.00, category: '工资', note: '10月工资' },
+            { id: 'r3',  date: '2026-11-05', amount: -15.00,  category: '交通', note: '地铁充值' },
+            { id: 'r4',  date: '2026-11-05', amount: -189.90, category: '购物', note: '电商零食' },
+            { id: 'r5',  date: '2026-11-04', amount: -45.00,  category: '饮食', note: '晚餐聚餐' },
+            { id: 'r6',  date: '2026-11-04', amount: 800.00,  category: '其他', note: '转账收入' },
+            { id: 'r7',  date: '2026-11-03', amount: -42.00, category: '交通', note: '打车' },
+            { id: 'r8',  date: '2026-11-03', amount: -30.00,  category: '娱乐', note: '电影票' },
+            { id: 'r9',  date: '2026-11-02', amount: 5000.00, category: '工资', note: '项目奖金' },
+            { id: 'r10', date: '2026-11-02', amount: -66.00,  category: '饮食', note: '咖啡+甜点' }
         ];
 
+        // 读取记录：带种子版本号，种子数据变更后自动覆盖旧 localStorage
         function loadRecords() {
+            const storedVersion = localStorage.getItem(VERSION_KEY);
+            if (storedVersion !== SEED_VERSION) {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(seedRecords));
+                localStorage.setItem(VERSION_KEY, SEED_VERSION);
+                return [...seedRecords];
+            }
             const stored = localStorage.getItem(STORAGE_KEY);
             if (stored) {
                 try { return JSON.parse(stored); }
@@ -54,38 +159,89 @@
         }
 
         let records = loadRecords();
+
+        // 迭代 6：当前筛选条件
+        let currentFilters = {
+            date: '',
+            category: '',
+            amountType: 'all'
+        };
+
         const tbody = document.getElementById('tableBody');
 
+        // 迭代 5：更新顶部汇总（基于全部记录）
+        function updateSummary() {
+            let totalIncome = 0;
+            let totalExpense = 0;
+
+            records.forEach(r => {
+                if (r.amount > 0) {
+                    totalIncome += r.amount;
+                } else {
+                    totalExpense += Math.abs(r.amount);
+                }
+            });
+
+            const balance = totalIncome - totalExpense;
+
+            document.getElementById('totalIncome').textContent  = `¥ ${totalIncome.toFixed(2)}`;
+            document.getElementById('totalExpense').textContent = `¥ ${totalExpense.toFixed(2)}`;
+
+            const balEl = document.getElementById('balance');
+            balEl.textContent = `¥ ${balance.toFixed(2)}`;
+            balEl.style.color = balance >= 0 ? '#1e7b4f' : '#b33a3a';
+        }
+
+        // 渲染表格（迭代 6：先按筛选条件过滤再渲染）
         function renderTable() {
+            // ① 按筛选条件过滤
+            const filtered = records.filter(record => {
+                if (currentFilters.date && record.date !== currentFilters.date) return false;
+                if (currentFilters.category && record.category !== currentFilters.category) return false;
+
+                const abs = Math.abs(record.amount);
+                if (currentFilters.amountType === 'gt100'   && abs <= 100) return false;
+                if (currentFilters.amountType === 'lt50'    && abs >= 50)  return false;
+                if (currentFilters.amountType === 'between' && (abs < 50 || abs > 100)) return false;
+
+                return true;
+            });
+
+            // ② 按日期降序排序
+            const sorted = [...filtered].sort((a, b) => (a.date < b.date ? 1 : -1));
+
+            // ③ 渲染
             tbody.innerHTML = '';
-            const sorted = [...records].sort((a, b) => (a.date < b.date ? 1 : -1));
 
             if (sorted.length === 0) {
                 const tr = document.createElement('tr');
                 tr.className = 'empty-row';
-                tr.innerHTML = `<td colspan="5">📭 暂无记录</td>`;
+                tr.innerHTML = `<td colspan="5">📭 没有符合条件的记录</td>`;
                 tbody.appendChild(tr);
-                return;
+            } else {
+                sorted.forEach(record => {
+                    const income = record.amount > 0;
+                    const cls = income ? 'income' : 'expense';
+                    const display = income
+                        ? `${record.amount.toFixed(2)}`
+                        : `-${Math.abs(record.amount).toFixed(2)}`;
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${record.date}</td>
+                        <td class="${cls}">¥ ${display}</td>
+                        <td>${record.category}</td>
+                        <td>${record.note || '—'}</td>
+                        <td>
+                            <button class="delete-btn" data-id="${record.id}">🗑️ 删除</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
             }
 
-            sorted.forEach(record => {
-                const income = record.amount > 0;
-                const cls = income ? 'income' : 'expense';
-                const display = income
-                    ? `${record.amount.toFixed(2)}`
-                    : `-${Math.abs(record.amount).toFixed(2)}`;
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${record.date}</td>
-                    <td class="${cls}">¥ ${display}</td>
-                    <td>${record.category}</td>
-                    <td>${record.note || '—'}</td>
-                    <td>
-                        <button class="delete-btn" data-id="${record.id}">🗑️ 删除</button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
+            // ④ 刷新汇总
+            updateSummary();
         }
 
         // 删除：事件委托
@@ -99,6 +255,27 @@
             renderTable();
         });
 
+        // 迭代 6：应用筛选
+        document.getElementById('applyFilterBtn').addEventListener('click', () => {
+            currentFilters = {
+                date:     document.getElementById('filterDate').value,
+                category: document.getElementById('filterCategory').value,
+                amountType: document.getElementById('filterAmountType').value
+            };
+            renderTable();
+        });
+
+        // 迭代 6：重置筛选
+        document.getElementById('resetFiltersBtn').addEventListener('click', () => {
+            document.getElementById('filterDate').value = '';
+            document.getElementById('filterCategory').value = '';
+            document.getElementById('filterAmountType').value = 'all';
+
+            currentFilters = { date: '', category: '', amountType: 'all' };
+            renderTable();
+        });
+
+        // 初始化
         renderTable();
     </script>
 </body>
