@@ -294,6 +294,11 @@ main.shell { padding-block: 28px; }
 .field-actions { display: flex; justify-content: flex-end; }
 .panel-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
 .panel-head .panel-title, .filter { margin: 0; }
+#records .filter { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; min-width: 0; }
+#records .filter-item { display: flex; align-items: center; gap: 6px; }
+#records .filter-item label { white-space: nowrap; }
+#records .filter .form-control { width: auto; min-width: 0; }
+#records .filter input[type="number"] { width: 100px; }
 .table-wrap { max-width: 100%; overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; }
 .table-wrap table { min-width: 600px; }
 .chart-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
