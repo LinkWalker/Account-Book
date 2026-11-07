@@ -12,7 +12,7 @@
  *   LedgerUtils.centsToMoney(cents) -> '12.30'，仅用于提示文案
  *   LedgerStorage.getData()         -> 记录数组（无数据返回 []）
  *   LedgerStorage.saveData(list)    -> 覆盖写入
- *   localStorage key：ledger_records，值为 JSON 数组
+ *   localStorage key：accountBookData，值为 JSON 数组
  *
  * 记录字段（全队唯一口径，list/stats/chart/filter 都必须按这个读）：
  *   id        string   唯一 id
@@ -170,9 +170,14 @@
   /** 读出现有记录 → 追加 → 写回；返回写入后的完整数组，供事件携带。 */
   function appendRecord(record) {
     var list = root.LedgerStorage.getData();
-    if (!Array.isArray(list)) list = [];
+    if (root.LedgerStorage.getData.lastError) {
+      throw new Error('读取账本失败，未覆盖原数据：' + root.LedgerStorage.getData.lastError);
+    }
+    if (!Array.isArray(list)) throw new Error('账本数据格式错误');
     list.push(record);
-    root.LedgerStorage.saveData(list);
+    if (root.LedgerStorage.saveData(list) !== true) {
+      throw new Error(root.LedgerStorage.saveData.lastError || '本地存储写入失败');
+    }
     return list;
   }
 

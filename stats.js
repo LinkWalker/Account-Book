@@ -8,11 +8,14 @@
 
   function compute(records) {
     let income = 0, expense = 0;
-    const expenseByCategory = {}; // { 餐饮: 120, 交通: 50, ... }
+    // 金额在存储及汇总中均为整数分，仅在展示边界换算为元。
+    const expenseByCategory = Object.create(null);
+    const incomeByCategory = Object.create(null);
     (records || []).forEach(function (r) {
       const amt = Number(r.amount) || 0;
       if (r.type === 'income') {
         income += amt;
+        incomeByCategory[r.category || '其他'] = (incomeByCategory[r.category || '其他'] || 0) + amt;
       } else {
         expense += amt;
         expenseByCategory[r.category || '其他'] = (expenseByCategory[r.category || '其他'] || 0) + amt;
@@ -22,14 +25,18 @@
       income: income,
       expense: expense,
       balance: income - expense,
-      expenseByCategory: expenseByCategory
+      expenseByCategory: expenseByCategory,
+      categoryStats: {
+        expense: Object.keys(expenseByCategory).map(name => ({ name: name, value: expenseByCategory[name] / 100 })),
+        income: Object.keys(incomeByCategory).map(name => ({ name: name, value: incomeByCategory[name] / 100 }))
+      }
     };
   }
   function render() {
     const records = (typeof global.getData === 'function') ? global.getData() : [];
     const s = compute(records);
 
-    const money = global.Utils ? global.Utils.formatMoney : function (n) { return '¥' + n.toFixed(2); };
+    const money = function (cents) { return '¥' + global.LedgerUtils.centsToMoney(cents); };
     const elIncome = document.getElementById('stat-income');
     const elExpense = document.getElementById('stat-expense');
     const elBalance = document.getElementById('stat-balance');
@@ -43,6 +50,11 @@
     // 通知 chart.js 刷新
     document.dispatchEvent(new CustomEvent('stats:updated', { detail: s }));
   }
+
+  // 图表初始化可主动读取；后续通过 stats:updated 事件刷新。
+  global.getCategoryStats = function () {
+    return compute(global.getData()).categoryStats;
+  };
 
   function init() {
     render();

@@ -11,7 +11,8 @@
  *   income:  [{ name: '工资', value: 5000.00 }, ...]   // 收入分类数组
  * }
  *
- * stats.js 每次计算完数据后，调用一次 onStatsUpdated()，chart.js 会自动刷新。
+ * stats.js 计算后派发 stats:updated，detail.categoryStats 使用上述格式。
+ * 也保留 onStatsUpdated(stats) 供直接传入分类数组。
  */
 
 // ========== 全局变量 ==========
@@ -38,6 +39,11 @@ function initChart() {
         return;
     }
 
+    if (typeof echarts === 'undefined') {
+        chartDom.textContent = '图表组件加载失败，请检查网络后刷新页面。账目记录仍可正常使用。';
+        return;
+    }
+
     pieChart = echarts.init(chartDom);
 
     // 创建 tab 切换按钮
@@ -56,15 +62,15 @@ function initChart() {
 
 // ========== 创建 Tab 切换按钮（支出/收入） ==========
 function createTabs() {
-    const chartSection = document.querySelector('.chart-section');
+    const chartSection = document.getElementById('chart') || document.querySelector('.chart-section');
     if (!chartSection) return;
 
     if (document.getElementById('chartTabs')) return; // 已存在则跳过
 
     const tabsHtml = `
         <div class="chart-tabs" id="chartTabs">
-            <button class="chart-tab active" data-tab="expense">支出分类</button>
-            <button class="chart-tab" data-tab="income">收入分类</button>
+            <button type="button" class="chart-tab active" data-tab="expense">支出分类</button>
+            <button type="button" class="chart-tab" data-tab="income">收入分类</button>
         </div>
     `;
     chartSection.insertAdjacentHTML('afterbegin', tabsHtml);
@@ -74,6 +80,8 @@ function createTabs() {
             document.querySelectorAll('.chart-tab').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             currentTab = btn.dataset.tab;
+            const title = document.getElementById('chart-title');
+            if (title) title.textContent = currentTab === 'expense' ? '支出构成' : '收入构成';
             tryRender();
         });
     });
@@ -104,7 +112,7 @@ function tryRender() {
     }
 
     const pieData = currentTab === 'expense' ? latestStats.expense : latestStats.income;
-    const option = buildChartOption(pieData || [], currentTab);
+    const option = pieData && pieData.length ? buildChartOption(pieData, currentTab) : buildEmptyOption();
     pieChart.setOption(option, true);
 }
 
@@ -128,7 +136,7 @@ function buildChartOption(pieData, type) {
             trigger: 'item',
             formatter: function(params) {
                 const percent = total > 0 ? ((params.value / total) * 100).toFixed(1) : 0;
-                return `<strong>${params.name}</strong><br/>
+                return `<strong>${LedgerUtils.escapeHtml(params.name)}</strong><br/>
                         金额：¥${params.value.toFixed(2)}<br/>
                         占比：${percent}%`;
             },
@@ -192,7 +200,7 @@ function buildEmptyOption() {
     return {
         title: {
             text: '暂无数据',
-            subtext: '等待统计数据加载...',
+            subtext: '记一笔后即可查看分类统计',
             left: 'center',
             top: 'middle',
             textStyle: { fontSize: 16, color: '#999' },
@@ -202,7 +210,11 @@ function buildEmptyOption() {
 }
 
 // ========== 页面加载完成后初始化 ==========
-document.addEventListener('DOMContentLoaded', function() {
-    // 等 stats.js 先加载完
-    setTimeout(initChart, 200);
+document.addEventListener('stats:updated', function(event) {
+    onStatsUpdated(event.detail.categoryStats);
 });
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initChart);
+} else {
+    initChart();
+}

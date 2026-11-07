@@ -53,4 +53,5 @@
     // 普通 script 标签引入后，其他文件可直接调用这两个函数。
     window.saveData = saveData;
     window.getData = getData;
+    window.LedgerStorage = { saveData: saveData, getData: getData };
 }());

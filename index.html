@@ -1,42 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-<style>
-body{background:#f6f7f9!important;color:#1f2328!important;margin:0!important;
-  font:15px/1.7 -apple-system,"Segoe UI","Microsoft YaHei",sans-serif!important}
-.shell,main{max-width:1080px;margin:0 auto;padding:0 20px}
-header{background:#fff!important;border-bottom:1px solid #e5e7eb;padding:14px 0;position:sticky;top:0;z-index:9}
-header a{color:#57606a!important;text-decoration:none;margin-right:16px;font-size:14px}
-header strong{color:#0969da!important;font-size:18px}
-h1,h2,h3{color:#1f2328!important}
-section{background:#fff!important;border:1px solid #e5e7eb!important;border-radius:12px;
-  padding:20px;margin-bottom:18px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
-#stat-income,#stat-expense,#stat-balance{display:inline-block;font-size:26px;font-weight:700;margin-top:4px}
-#stat-income{color:#1a7f37!important}
-#stat-expense{color:#cf222e!important}
-#stat-balance{color:#0969da!important}
-label{display:block;margin:10px 0 4px;color:#57606a!important;font-size:13px}
-input,select{width:100%;padding:9px 10px;background:#fff!important;border:1px solid #d0d7de!important;
-  border-radius:8px;color:#1f2328!important;font-size:14px}
-input:focus,select:focus{outline:none;border-color:#0969da!important;box-shadow:0 0 0 3px rgba(9,105,218,.12)}
-button{padding:9px 18px;border:0;border-radius:8px;background:#0969da!important;color:#fff!important;
-  font-size:14px;cursor:pointer}
-button:hover{background:#0757b6!important}
-table{width:100%;border-collapse:collapse;font-size:14px}
-th,td{padding:10px 8px;border-bottom:1px solid #eaeef2;text-align:left;
-  color:#1f2328!important;background:#fff!important}
-th{color:#57606a!important;font-weight:600;background:#f6f8fa!important}
-td button{background:#cf222e!important;padding:5px 10px;font-size:12px}
-#chartPie{height:320px;background:#fff!important;border:1px solid #eaeef2;border-radius:10px}
-input[type="radio"]{
-  display:inline-block!important;visibility:visible!important;opacity:1!important;
-  width:16px!important;height:16px!important;min-width:16px!important;
-  margin:0 6px 0 0!important;position:static!important;transform:none!important;
-  appearance:auto!important;-webkit-appearance:auto!important;accent-color:#0969da;
-}
-input[type="radio"] + label,label:has(input[type="radio"]){display:inline-block!important;width:auto!important;
-  margin:0 18px 0 0!important;color:#1f2328!important;font-size:14px!important;font-weight:400!important;
-  background:none!important;border:0!important;padding:0!important}
-</style>
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -95,24 +59,24 @@ input[type="radio"] + label,label:has(input[type="radio"]){display:inline-block!
           <form class="entry-form" id="ledgerForm" novalidate>
             <p class="field">
               <label class="field-label" for="recordDate">日期</label>
-              <input type="date" id="recordDate" name="date" required />
+              <input class="form-control" type="date" id="recordDate" name="date" required />
             </p>
 
             <p class="field">
               <label class="field-label" for="recordAmount">金额</label>
-              <input type="number" id="recordAmount" name="amount"
+              <input class="form-control" type="number" id="recordAmount" name="amount"
                      inputmode="decimal" min="0.01" step="0.01" placeholder="0.00" required />
             </p>
 
             <p class="field">
               <span class="field-label">类型</span>
-              <label class="type-item"><input type="radio" name="recordType" id="recordType" value="expense" checked /> 支出</label>
-              <label class="type-item"><input type="radio" name="recordType" value="income" /> 收入</label>
+              <label class="type-item"><input type="radio" name="recordType" id="recordType" value="expense" checked /><span>支出</span></label>
+              <label class="type-item"><input type="radio" name="recordType" value="income" /><span>收入</span></label>
             </p>
 
             <p class="field">
               <label class="field-label" for="recordCategory">类别</label>
-              <select id="recordCategory" name="category" required>
+              <select class="form-control" id="recordCategory" name="category" required>
                 <option value="">请选择类别</option>
                 <option value="饮食">饮食</option>
                 <option value="交通">交通</option>
@@ -132,7 +96,7 @@ input[type="radio"] + label,label:has(input[type="radio"]){display:inline-block!
 
             <p class="field">
               <label class="field-label" for="recordNote">备注</label>
-              <input type="text" id="recordNote" name="note" maxlength="60" placeholder="选填" />
+              <input class="form-control" type="text" id="recordNote" name="note" maxlength="30" placeholder="选填" />
             </p>
 
             <p class="form-tip" id="formTip" role="status" aria-live="polite"></p>
@@ -151,7 +115,7 @@ input[type="radio"] + label,label:has(input[type="radio"]){display:inline-block!
 
             <p class="filter">
               <label class="sr-only" for="filterCategory">按类别筛选</label>
-              <select id="filterCategory" name="filterCategory">
+              <select class="form-control" id="filterCategory" name="filterCategory">
                 <option value="">全部类别</option>
                 <option value="饮食">饮食</option>
                 <option value="交通">交通</option>
@@ -178,7 +142,7 @@ input[type="radio"] + label,label:has(input[type="radio"]){display:inline-block!
                   <th scope="col">日期</th>
                   <th scope="col">类型</th>
                   <th scope="col">类别</th>
-                  <th scope="col">金额</th>
+                  <th scope="col" class="amount">金额</th>
                   <th scope="col">备注</th>
                   <th scope="col">删除</th>
                 </tr>
@@ -202,7 +166,10 @@ input[type="radio"] + label,label:has(input[type="radio"]){display:inline-block!
         <!-- 区块五：数据导出，交互归 export.js（陈嘉俊） -->
         <section class="panel" id="tools" aria-labelledby="tools-title">
           <h2 class="panel-title" id="tools-title">数据</h2>
-          <button type="button" id="export-btn">导出 CSV</button>
+          <div class="toolbar">
+            <button type="button" id="export-btn" class="btn btn-secondary">导出 JSON</button>
+            <button type="button" id="exportCsvBtn" class="btn btn-secondary">导出 CSV</button>
+          </div>
         </section>
       </aside>
     </div>
@@ -229,14 +196,6 @@ input[type="radio"] + label,label:has(input[type="radio"]){display:inline-block!
   <script src="filter.js"></script>
 
   <script>
-    var storageGetData = window.getData;
-    var storageSaveData = window.saveData;
-    window.LedgerStorage = window.LedgerStorage || {
-      getData: function () { return storageGetData ? storageGetData() : []; },
-      saveData: function (list) { return storageSaveData ? storageSaveData(list) : false; }
-    };
-    window.getData = function () { return window.LedgerStorage ? LedgerStorage.getData() : []; };
-    window.saveData = function (list) { if (window.LedgerStorage) LedgerStorage.saveData(list); };
     document.addEventListener('ledger:change', function (e) {
       document.dispatchEvent(new CustomEvent('records:changed', { detail: e.detail }));
     });
