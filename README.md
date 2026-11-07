@@ -17,7 +17,7 @@ python -m http.server 8000 --bind 127.0.0.1
 - `storage.js` 提供 `getData()`、`saveData(records)` 及同名的 `LedgerStorage` 方法。保存成功返回 `true`，失败返回 `false`；调用后通过函数的 `lastError` 属性查看异常。
 - `amount` 存储为整数分，例如 18 元存 `1800`。列表和统计卡片使用 `LedgerUtils.centsToMoney()` 展示；图表和导出金额换算为元。原表单已按分存储，本修复不改写历史记录或猜测手工数据的金额单位。
 - 表单保存成功后派发 `ledger:change`，主页面桥接为 `records:changed`；列表和统计监听后者，失败时不派发成功事件。
-- 统计卡片始终汇总全部记录，类别筛选仅影响列表。`stats:updated` 的 `detail.categoryStats` 提供以元为单位的收入、支出分类数组，供图表监听；`getCategoryStats()` 提供初始化读取。
+- 日期、类别及金额范围筛选同时影响列表、统计卡片和图表。`stats:updated` 的 `detail.categoryStats` 提供以元为单位的收入、支出分类数组，供图表监听；`getCategoryStats()` 提供初始化读取。
 - JSON、CSV 按钮分别下载 `data.json`、`data.csv`，导出全部记录。
 
 ## 验证

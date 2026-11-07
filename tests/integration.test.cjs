@@ -39,7 +39,7 @@ function app(options = {}) {
   }
   for (const id of ['ledgerForm', 'recordDate', 'recordAmount', 'recordCategory',
     'recordNote', 'formTip', 'ledger-tbody', 'stat-income', 'stat-expense',
-    'stat-balance', 'filterCategory', 'chartPie', 'chart', 'chart-title', 'export-btn', 'exportCsvBtn']) {
+    'stat-balance', 'filterDate', 'filterMinAmount', 'filterMaxAmount', 'filterCategory', 'chartPie', 'chart', 'chart-title', 'export-btn', 'exportCsvBtn']) {
     nodes[id] = new Element(id);
   }
   const tabs = [], radios = ['expense', 'income'].map(type => {
@@ -127,15 +127,15 @@ test('six table headers align with six escaped cells', () => {
   assert.match(a.rows(), /col-type">支出/);
 });
 
-test('filter remains active after add and delete; totals cover full ledger', () => {
+test('filter remains active after add and delete; totals follow filters', () => {
   const a = app(); a.submit('18.00'); a.submit('2.00', '交通');
   const transport = a.context.getData()[1].id;
   a.nodes.filterCategory.value = '交通'; a.nodes.filterCategory.emit('change');
   a.submit('20.00'); assert.doesNotMatch(a.rows(), /饮食/); assert.match(a.rows(), /交通/);
   a.remove(transport); assert.match(a.rows(), /colspan="6"/);
   assert.equal(a.context.getData().length, 2);
-  assert.equal(a.nodes['stat-expense'].textContent, '¥38.00');
-  assert.equal(a.charts.at(-1).series[0].data[0].value, 38);
+  assert.equal(a.nodes['stat-expense'].textContent, '¥0.00');
+  assert.equal(a.charts.at(-1).title.text, '暂无数据');
 });
 
 test('failed save retains input, does not reset or change chart/list/stats', () => {
@@ -179,4 +179,28 @@ test('missing chart CDN leaves recording usable; invalid input is rejected', () 
   a.submit('0'); assert.equal(a.context.getData().length, 0);
   a.submit('18.00', '工资', 'expense'); assert.equal(a.context.getData().length, 0);
   a.submit(); assert.equal(a.context.getData().length, 1);
+});
+
+
+test('date and amount filters update list, totals and chart together', () => {
+  const a = app(); a.submit('18.00'); a.submit('2.00', '交通');
+  a.nodes.filterMinAmount.value = '10'; a.nodes.filterMinAmount.emit('input');
+  assert.equal(a.nodes['stat-expense'].textContent, '¥18.00');
+  assert.doesNotMatch(a.rows(), /交通/);
+  assert.equal(a.charts.at(-1).series[0].data[0].value, 18);
+  a.nodes.filterMaxAmount.value = '15'; a.nodes.filterMaxAmount.emit('input');
+  assert.equal(a.nodes['stat-expense'].textContent, '¥0.00');
+  a.nodes.filterMinAmount.value = ''; a.nodes.filterMaxAmount.value = '';
+  a.nodes.filterDate.value = '2026-11-06'; a.nodes.filterDate.emit('input');
+  assert.match(a.rows(), /colspan="6"/);
+  a.nodes.filterDate.value = ''; a.nodes.filterDate.emit('input');
+  assert.equal(a.nodes['stat-expense'].textContent, '¥20.00');
+});
+
+test('corrupt storage blocks both exports with the read error', () => {
+  const a = app({ store: new Map([['accountBookData', '{invalid']]) });
+  assert.equal(a.context.LedgerExport.exportJSON(), false);
+  assert.ok(a.context.LedgerExport.readRecords.lastError);
+  assert.equal(a.context.LedgerExport.exportCSV(), false);
+  assert.equal(a.downloads.length, 0);
 });
