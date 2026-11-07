@@ -22,30 +22,31 @@
 
   function formatAmount(record) {
     const sign = record.type === 'expense' ? '-' : '+';
-    const num = Math.abs(Number(record.amount) || 0).toFixed(2);
+    const num = global.LedgerUtils.centsToMoney(Math.abs(Number(record.amount) || 0));
     return sign + '¥' + num;
   }
 
   function amountClass(record) {
-    return record.type === 'expense' ? 'amount-expense' : 'amount-income';
+    return record.type === 'expense' ? 'expense' : 'income';
   }
 
   function renderEmptyRow(tbody) {
     const tr = document.createElement('tr');
-    tr.innerHTML = '<td colspan="5" class="empty-tip">暂无账本记录，先在上方记一笔吧～</td>';
+    tr.innerHTML = '<td colspan="6" class="empty-state">暂无符合条件的记录</td>';
     tbody.appendChild(tr);
   }
 
   function renderRow(record) {
     const tr = document.createElement('tr');
     tr.dataset.id = record.id;
-    const esc = global.Utils ? global.Utils.escapeHtml : function (s) { return s; };
+    const esc = global.LedgerUtils.escapeHtml;
     tr.innerHTML =
       '<td class="col-date">' + esc(record.date || '-') + '</td>' +
-      '<td class="col-amount ' + amountClass(record) + '">' + formatAmount(record) + '</td>' +
+      '<td class="col-type">' + (record.type === 'income' ? '收入' : '支出') + '</td>' +
       '<td class="col-category"><span class="tag">' + esc(record.category || '未分类') + '</span></td>' +
+      '<td class="col-amount amount ' + amountClass(record) + '">' + formatAmount(record) + '</td>' +
       '<td class="col-note">' + esc(record.note || '') + '</td>' +
-      '<td class="col-action"><button class="btn-delete" data-id="' + esc(record.id) + '">删除</button></td>';
+      '<td class="col-action"><button type="button" class="btn-delete btn btn-danger btn-sm" data-id="' + esc(record.id) + '">删除</button></td>';
     return tr;
   }
 
@@ -60,6 +61,12 @@
 
     if (!Array.isArray(records)) {
       records = (typeof global.getData === 'function') ? global.getData() : [];
+    }
+
+    // 每次刷新都保留当前筛选条件，包括新增和删除引起的刷新。
+    const category = document.getElementById('filterCategory');
+    if (category && global.LedgerFilter) {
+      records = global.LedgerFilter.filterByCategory(records, category.value);
     }
 
     tbody.innerHTML = '';
@@ -84,10 +91,17 @@
     if (!global.confirm('确定要删除这条记录吗？')) return;
 
     const all = (typeof global.getData === 'function') ? global.getData() : [];
+    if (global.getData && global.getData.lastError) {
+      global.alert('读取账本失败，未删除记录：' + global.getData.lastError);
+      return;
+    }
     const next = all.filter(function (r) { return r.id !== id; });
 
     if (typeof global.saveData === 'function') {
-      global.saveData(next);
+      if (global.saveData(next) !== true) {
+        global.alert('删除失败：' + (global.saveData.lastError || '本地存储写入失败'));
+        return;
+      }
       document.dispatchEvent(new CustomEvent('records:changed', { detail: { records: next } }));
     }
   }

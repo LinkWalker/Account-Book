@@ -22,12 +22,10 @@
  *   date      'YYYY-MM-DD'                  （form.html 的 date input）
  *   category  中文类别名：饮食/交通/购物/娱乐/学习/医疗/居住/其他支出
  *                            工资/兼职/理财/红包/其他收入
- *   amount    数字，单位为「元」，两位小数（form.html：step=0.01、min=0.01）
+ *   amount    数字，存储单位为整数「分」，导出时换算为元
  *   note      字符串，≤30 字
  *
- * 注意：utils.js 提供了 moneyToCents()/centsToMoney()，若梁洪睿的 storage.js
- *      最终决定「金额以整数分存储」，请把下面 CONFIG.amountUnit 改成 'cents'，
- *      本模块导出时会统一换算成「元」，否则 data.json 里会出现 2550 而不是 25.5。
+ * 金额与 form.js 对齐：CONFIG.amountUnit 为 'cents'，导出时统一换算成元。
  *
  * 页面接入（交给李韩远，已按 style.css 的约定对齐）：
  *   <div class="toolbar">
@@ -53,7 +51,7 @@
     csvFileName: 'data.csv',
     // 'yuan'  = storage 里存的就是元（form.html 的默认语义）
     // 'cents' = storage 里存的是整数分（utils.js 的 moneyToCents 结果），导出时换算成元
-    amountUnit: 'yuan'
+    amountUnit: 'cents'
   };
 
   // 队友可能使用的 localStorage key，按顺序探测（回退用）
