@@ -5,22 +5,101 @@
     <title>个人记账本 · 收支列表</title>
     <style>
         body { font-family: system-ui, sans-serif; background: #f7f9fc; padding: 2rem; }
-        table { width: 100%; border-collapse: collapse; background: white; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 1rem; overflow: hidden; }
         th, td { padding: 0.8rem 1rem; border-bottom: 1px solid #e3eaf3; text-align: left; }
-        th { background: #eef3fb; color: #1a3b5c; }
+        th { background: #eef3fb; color: #1a3b5c; font-size: 0.85rem; text-transform: uppercase; }
+        .income { color: #1c7e4c; font-weight: 600; }
+        .expense { color: #b13e3e; font-weight: 600; }
+        .delete-btn {
+            background: none; border: 1px solid #e1c9c9; color: #b13e3e;
+            padding: 0.3rem 0.9rem; border-radius: 30px; font-size: 0.8rem; cursor: pointer;
+        }
+        .delete-btn:hover { background: #ffeeee; }
+        .empty-row td { text-align: center; color: #98a9bb; padding: 3rem; font-style: italic; }
     </style>
 </head>
 <body>
     <h1>📒 收支记录列表</h1>
     <table>
         <thead>
-            <tr><th>日期</th><th>金额</th><th>类别</th><th>备注</th><th>操作</th></tr>
+            <tr><th>日期</th><th>金额 (¥)</th><th>类别</th><th>备注</th><th>操作</th></tr>
         </thead>
-        <tbody>
-            <tr><td>2026-11-06</td><td>-18.50</td><td>饮食</td><td>午餐外卖</td><td>删除</td></tr>
-            <tr><td>2026-11-06</td><td>4200.00</td><td>工资</td><td>10月工资</td><td>删除</td></tr>
-            <tr><td>2026-11-05</td><td>-15.00</td><td>交通</td><td>地铁充值</td><td>删除</td></tr>
-        </tbody>
+        <tbody id="tableBody"></tbody>
     </table>
+
+    <script>
+        const STORAGE_KEY = 'account_book_records';
+
+        const seedRecords = [
+            { id: 'r1', date: '2026-11-06', amount: -18.50, category: '饮食', note: '午餐外卖' },
+            { id: 'r2', date: '2026-11-06', amount: 4200.00, category: '工资', note: '10月工资' },
+            { id: 'r3', date: '2026-11-05', amount: -15.00, category: '交通', note: '地铁充值' },
+            { id: 'r4', date: '2026-11-05', amount: -189.90, category: '购物', note: '电商零食' },
+            { id: 'r5', date: '2026-11-04', amount: -45.00, category: '饮食', note: '晚餐聚餐' },
+            { id: 'r6', date: '2026-11-04', amount: 800.00, category: '其他', note: '转账收入' }
+        ];
+
+        function loadRecords() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                try { return JSON.parse(stored); }
+                catch (e) { return [...seedRecords]; }
+            }
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(seedRecords));
+            return [...seedRecords];
+        }
+
+        function saveRecords() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+        }
+
+        let records = loadRecords();
+        const tbody = document.getElementById('tableBody');
+
+        function renderTable() {
+            tbody.innerHTML = '';
+            const sorted = [...records].sort((a, b) => (a.date < b.date ? 1 : -1));
+
+            if (sorted.length === 0) {
+                const tr = document.createElement('tr');
+                tr.className = 'empty-row';
+                tr.innerHTML = `<td colspan="5">📭 暂无记录</td>`;
+                tbody.appendChild(tr);
+                return;
+            }
+
+            sorted.forEach(record => {
+                const income = record.amount > 0;
+                const cls = income ? 'income' : 'expense';
+                const display = income
+                    ? `${record.amount.toFixed(2)}`
+                    : `-${Math.abs(record.amount).toFixed(2)}`;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${record.date}</td>
+                    <td class="${cls}">¥ ${display}</td>
+                    <td>${record.category}</td>
+                    <td>${record.note || '—'}</td>
+                    <td>
+                        <button class="delete-btn" data-id="${record.id}">🗑️ 删除</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // 删除：事件委托
+        tbody.addEventListener('click', (e) => {
+            const btn = e.target.closest('.delete-btn');
+            if (!btn) return;
+            const id = btn.getAttribute('data-id');
+            if (!confirm('确定删除这条记录吗？')) return;
+            records = records.filter(r => r.id !== id);
+            saveRecords();
+            renderTable();
+        });
+
+        renderTable();
+    </script>
 </body>
 </html>
