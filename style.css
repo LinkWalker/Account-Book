@@ -1,0 +1,273 @@
+/* 个人记账本公共样式。页面在 head 中引入：<link rel="stylesheet" href="./style.css"> */
+/* 表格外层使用 .table-wrapper；金额列使用 .amount，收入/支出使用 .income / .expense。 */
+
+/* 1. 统一配色与基础排版 */
+:root {
+  color-scheme: light;
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --primary-soft: #eff6ff;
+  --background: #f4f7fb;
+  --surface: #ffffff;
+  --text: #1e293b;
+  --text-muted: #64748b;
+  --border: #dbe3ee;
+  --income: #047857;
+  --income-soft: #ecfdf5;
+  --expense: #be123c;
+  --expense-soft: #fff1f2;
+  --radius: 14px;
+  --shadow: 0 6px 24px rgb(30 41 59 / 5%);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+    "Microsoft YaHei", sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+h1, h2, h3, p { margin: 0 0 1rem; }
+h1 { font-size: clamp(1.6rem, 4vw, 2.2rem); }
+h2 { font-size: 1.25rem; }
+h3 { font-size: 1.05rem; }
+h1, h2, h3 { line-height: 1.35; }
+a { color: var(--primary); text-underline-offset: 3px; }
+a:hover { color: var(--primary-hover); }
+button, input, select, textarea { font: inherit; }
+button, input, select, textarea { max-width: 100%; }
+[hidden] { display: none !important; }
+
+/* 容器和卡片为页面整合提供公共类，不依赖特定脚本。 */
+.container {
+  width: min(1120px, calc(100% - 32px));
+  margin-inline: auto;
+  padding-block: 32px;
+}
+
+.page-header { margin-bottom: 24px; }
+.page-header p, .text-muted { color: var(--text-muted); }
+.card, .ledger-form-section {
+  min-width: 0;
+  padding: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+/* 2. 兼容 form.html 已有的全部表单类名 */
+.form-title { margin-bottom: 24px; }
+.ledger-form { display: grid; gap: 18px; }
+.form-row {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
+}
+.form-label { font-weight: 600; }
+.form-field { min-width: 0; }
+.form-control {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+.form-control::placeholder { color: var(--text-muted); opacity: 1; }
+.form-control:hover:not(:disabled) { border-color: #94a3b8; }
+.form-control:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-color: var(--primary);
+}
+.form-control:disabled { background: #f1f5f9; cursor: not-allowed; }
+textarea.form-control { min-height: 100px; resize: vertical; }
+/* 由业务校验显式标记，避免页面刚打开就把必填项显示为错误。 */
+.form-control[aria-invalid="true"], .form-control.is-invalid {
+  border-color: var(--expense);
+}
+.amount-field { position: relative; }
+.amount-prefix {
+  position: absolute;
+  inset-inline-start: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+.amount-field .form-control { padding-inline-start: 32px; }
+.type-switch { display: flex; flex-wrap: wrap; gap: 10px; }
+.type-item { position: relative; cursor: pointer; }
+/* 保留原生 radio 的键盘操作和辅助技术语义。 */
+.type-item input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.type-item span {
+  display: block;
+  min-width: 88px;
+  padding: 8px 20px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  text-align: center;
+}
+.type-item input:checked + span {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  color: var(--primary-hover);
+  font-weight: 600;
+}
+.type-item input[value="expense"]:checked + span {
+  border-color: var(--expense);
+  background: var(--expense-soft);
+  color: var(--expense);
+}
+.type-item input[value="income"]:checked + span {
+  border-color: var(--income);
+  background: var(--income-soft);
+  color: var(--income);
+}
+.type-item input:focus-visible + span {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+}
+.type-item input:disabled + span { opacity: 0.55; cursor: not-allowed; }
+.form-tip { margin: 0; color: var(--expense); font-size: 0.875rem; }
+.form-tip:empty { display: none; }
+.form-tip.success { color: var(--income); }
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-top: 4px;
+}
+
+/* 3. 按钮：原生 button 默认主色，次要/删除操作用对应类覆盖。 */
+button, .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 9px 20px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: var(--primary);
+  color: #fff;
+  font-weight: 600;
+  line-height: 1.5;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+button:hover, .btn:hover, .btn-primary:hover {
+  background: var(--primary-hover);
+  color: #fff;
+}
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-ghost, .btn-secondary {
+  border-color: var(--border);
+  background: var(--surface);
+  color: var(--text);
+}
+.btn-ghost:hover, .btn-secondary:hover {
+  border-color: #94a3b8;
+  background: #f1f5f9;
+  color: var(--text);
+}
+.btn-danger { background: var(--expense); color: #fff; }
+.btn-danger:hover { background: #9f1239; }
+.btn-sm { min-height: 36px; padding: 5px 12px; font-size: 0.875rem; }
+button:focus-visible, .btn:focus-visible, a:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+}
+button:disabled, .btn.disabled, .btn[aria-disabled="true"] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+/* disabled 链接仍需业务脚本拦截激活；按钮请优先设置原生 disabled 属性。 */
+
+/* 4. 记录表格：外层加 .table-wrapper，在窄屏内横向滚动。 */
+.table-wrapper {
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+table { width: 100%; border-collapse: collapse; font-size: 0.9375rem; }
+caption { padding: 12px 16px; text-align: left; font-weight: 600; }
+th, td { padding: 14px 16px; text-align: left; vertical-align: middle; }
+th {
+  background: #f1f5f9;
+  color: #475569;
+  font-weight: 600;
+  white-space: nowrap;
+}
+tbody tr + tr { border-top: 1px solid var(--border); }
+thead + tbody tr:first-child { border-top: 1px solid var(--border); }
+tbody tr:hover { background: #f8fafc; }
+td { overflow-wrap: anywhere; }
+th.amount, td.amount { text-align: right; white-space: nowrap; }
+.amount { font-variant-numeric: tabular-nums; }
+.income { color: var(--income); }
+.expense { color: var(--expense); }
+.table-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.empty-state { padding: 40px 16px; color: var(--text-muted); text-align: center; }
+
+/* 5. 统计卡片和筛选工具栏公共布局 */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.stat-label { margin-bottom: 8px; color: var(--text-muted); font-size: 0.875rem; }
+.stat-value {
+  margin: 0;
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.toolbar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; margin-bottom: 20px; }
+.toolbar > * { min-width: 0; }
+.toolbar .form-field { flex: 1 1 160px; }
+
+/* 6. 手机端：标签与输入框上下排列，按钮保留足够点击面积。 */
+@media (max-width: 600px) {
+  .container { width: calc(100% - 24px); padding-block: 20px; }
+  .card, .ledger-form-section { padding: 18px; }
+  .form-row { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .form-title { margin-bottom: 20px; }
+  .form-actions .btn, .form-actions button { flex: 1; }
+  .stats-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .table-wrapper table { min-width: 560px; }
+  th, td { padding: 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; }
+}
