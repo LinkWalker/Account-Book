@@ -1,0 +1,110 @@
+<!-- ===============================================================
+     form.html  ——  记账本「录入表单」区块        负责人：林豪
+   ·······························································
+     用法：由李韩远直接整块粘贴进 index.html 的 <body> 里，
+           放在 <script src="js/form.js"></script> 之前即可；
+           本文件不含任何 <script>，逻辑全部交给 form.js。
+
+     对接约定（给 form.js / stats.js 的同学）：
+       form#ledgerForm      表单容器，submit 事件监听这里
+       #recordType          收支类型 radio，值 expense / income，默认 expense
+       #recordDate          日期，type=date，值为 YYYY-MM-DD
+       #recordAmount        金额，type=number，step=0.01，min=0.01
+       #recordCategory      类别，option 的 value 就是中文类别名
+       #recordNote          备注，可为空
+       #formTip             校验提示容器（role=status + aria-live，可直接写文案）
+       #submitBtn           提交按钮（可用 .disabled / disabled 属性做防抖）
+       #resetBtn            清空按钮（可选，不需要可整行删掉）
+     说明：日期默认值无法用纯 HTML 设置，由 form.js 用
+           input.value = new Date().toISOString().slice(0,10) 初始化；
+           或 李韩远 拼装时把该 input 的 value 写死亦可。
+     样式：这里只给结构，全部类名交给薛昌建的 style.css 走；
+           类名若与 style.css 冲突以 style.css 为准，只保证上面的 id 不变。
+================================================================= -->
+<section class="ledger-form-section" id="formSection">
+  <h2 class="form-title">记一笔</h2>
+
+  <form class="ledger-form" id="ledgerForm" novalidate>
+
+    <!-- 1. 收支类型：统计组要算「总收入 / 总支出」，靠它区分 -->
+    <div class="form-row">
+      <span class="form-label">类型</span>
+      <div class="form-field type-switch">
+        <label class="type-item">
+          <input type="radio" name="recordType" id="recordType" value="expense" checked>
+          <span>支出</span>
+        </label>
+        <label class="type-item">
+          <input type="radio" name="recordType" value="income">
+          <span>收入</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- 2. 日期选择 -->
+    <div class="form-row">
+      <label class="form-label" for="recordDate">日期</label>
+      <div class="form-field">
+        <input class="form-control" type="date" id="recordDate" name="date" required>
+      </div>
+    </div>
+
+    <!-- 3. 金额输入 -->
+    <div class="form-row">
+      <label class="form-label" for="recordAmount">金额</label>
+      <div class="form-field amount-field">
+        <span class="amount-prefix">¥</span>
+        <input class="form-control" type="number" id="recordAmount" name="amount"
+               inputmode="decimal" step="0.01" min="0.01"
+               placeholder="0.00" autocomplete="off" required>
+      </div>
+    </div>
+
+    <!-- 4. 类别下拉框 -->
+    <div class="form-row">
+      <label class="form-label" for="recordCategory">类别</label>
+      <div class="form-field">
+        <select class="form-control" id="recordCategory" name="category" required>
+          <option value="">请选择类别</option>
+          <!-- 支出/收入分组与作业要求对齐：作业示例为「饮食、交通、工资等」 -->
+          <optgroup label="支出">
+            <option value="饮食">饮食</option>
+            <option value="交通">交通</option>
+            <option value="购物">购物</option>
+            <option value="娱乐">娱乐</option>
+            <option value="学习">学习</option>
+            <option value="医疗">医疗</option>
+            <option value="居住">居住</option>
+            <option value="其他支出">其他支出</option>
+          </optgroup>
+          <optgroup label="收入">
+            <option value="工资">工资</option>
+            <option value="兼职">兼职</option>
+            <option value="理财">理财</option>
+            <option value="红包">红包</option>
+            <option value="其他收入">其他收入</option>
+          </optgroup>
+        </select>
+      </div>
+    </div>
+
+    <!-- 5. 备注输入 -->
+    <div class="form-row">
+      <label class="form-label" for="recordNote">备注</label>
+      <div class="form-field">
+        <input class="form-control" type="text" id="recordNote" name="note"
+               maxlength="30" placeholder="选填，例如：食堂午饭">
+      </div>
+    </div>
+
+    <!-- 校验提示：form.js 直接改这里的文字即可 -->
+    <p class="form-tip" id="formTip" role="status" aria-live="polite"></p>
+
+    <!-- 6. 按钮区 -->
+    <div class="form-actions">
+      <button class="btn btn-ghost" type="reset" id="resetBtn">清空</button>
+      <button class="btn btn-primary" type="submit" id="submitBtn">保存</button>
+    </div>
+
+  </form>
+</section>
