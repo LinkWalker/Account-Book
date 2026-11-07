@@ -114,6 +114,18 @@
             <h2 class="panel-title" id="records-title">明细</h2>
 
             <p class="filter">
+              <span class="filter-item">
+              <label for="filterDate">日期</label>
+              <input class="form-control" type="date" id="filterDate" />
+              </span>
+              <span class="filter-item">
+              <label for="filterMinAmount">最低金额</label>
+              <input class="form-control" type="number" id="filterMinAmount" min="0" step="0.01" placeholder="不限" />
+              </span>
+              <span class="filter-item">
+              <label for="filterMaxAmount">最高金额</label>
+              <input class="form-control" type="number" id="filterMaxAmount" min="0" step="0.01" placeholder="不限" />
+              </span>
               <label class="sr-only" for="filterCategory">按类别筛选</label>
               <select class="form-control" id="filterCategory" name="filterCategory">
                 <option value="">全部类别</option>

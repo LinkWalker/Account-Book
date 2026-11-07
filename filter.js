@@ -11,6 +11,21 @@
     });
   }
 
+  function filterRecords(records) {
+    function value(id) {
+      var field = root.document.getElementById(id);
+      return field ? field.value : '';
+    }
+    var date = value('filterDate');
+    var min = value('filterMinAmount');
+    var max = value('filterMaxAmount');
+    return filterByCategory(records, value('filterCategory')).filter(function (record) {
+      return (!date || record.date === date) &&
+        (min === '' || record.amount / 100 >= Number(min)) &&
+        (max === '' || record.amount / 100 <= Number(max));
+    });
+  }
+
   /** 在筛选框加载后调用一次；返回刷新函数，供新增、删除成功后调用。 */
   function init(getData, renderList) {
     if (typeof getData !== 'function' || typeof renderList !== 'function') {
@@ -20,17 +35,22 @@
     if (!select) throw new Error('未找到类别筛选框 #filterCategory');
 
     function refresh() {
-      var records = filterByCategory(getData(), select.value);
+      var records = filterRecords(getData());
       renderList(records);
+      root.document.dispatchEvent(new CustomEvent('records:filtered'));
       return records;
     }
 
     refresh();
     select.addEventListener('change', refresh);
+    ['filterDate', 'filterMinAmount', 'filterMaxAmount'].forEach(function (id) {
+      var field = root.document.getElementById(id);
+      if (field) field.addEventListener('input', refresh);
+    });
     return refresh;
   }
 
-  var api = Object.freeze({ filterByCategory: filterByCategory, init: init });
+  var api = Object.freeze({ filterByCategory: filterByCategory, filterRecords: filterRecords, init: init });
   if (typeof module === 'object' && module.exports) module.exports = api;
   else root.LedgerFilter = api;
 }(typeof globalThis !== 'undefined' ? globalThis : window));

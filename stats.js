@@ -33,7 +33,7 @@
     };
   }
   function render() {
-    const records = (typeof global.getData === 'function') ? global.getData() : [];
+    const records = global.LedgerFilter.filterRecords((typeof global.getData === 'function') ? global.getData() : []);
     const s = compute(records);
 
     const money = function (cents) { return '¥' + global.LedgerUtils.centsToMoney(cents); };
@@ -53,12 +53,13 @@
 
   // 图表初始化可主动读取；后续通过 stats:updated 事件刷新。
   global.getCategoryStats = function () {
-    return compute(global.getData()).categoryStats;
+    return compute(global.LedgerFilter.filterRecords(global.getData())).categoryStats;
   };
 
   function init() {
     render();
     document.addEventListener('records:changed', render);
+    document.addEventListener('records:filtered', render);
   }
 
   if (document.readyState === 'loading') {

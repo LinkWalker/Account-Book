@@ -66,7 +66,7 @@
     // 每次刷新都保留当前筛选条件，包括新增和删除引起的刷新。
     const category = document.getElementById('filterCategory');
     if (category && global.LedgerFilter) {
-      records = global.LedgerFilter.filterByCategory(records, category.value);
+      records = global.LedgerFilter.filterRecords(records);
     }
 
     tbody.innerHTML = '';

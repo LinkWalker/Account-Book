@@ -85,16 +85,19 @@
   }
 
   function readRecords() {
+    readRecords.lastError = null;
     // 1) 优先用队友的 storage.js
     if (typeof getData === 'function') {
       try {
         var fromStorage = pickList(getData());
+        if (getData.lastError) {
+          readRecords.lastError = getData.lastError;
+          return [];
+        }
         if (fromStorage) return fromStorage;
       } catch (err) {
-        // getData 抛错（例如 JSON 损坏）时不中断导出，继续走回退
-        if (typeof console !== 'undefined') {
-          console.warn('[export.js] getData() 调用失败，改用 localStorage 回退：', err);
-        }
+        readRecords.lastError = err.message || '读取账本失败';
+        return [];
       }
     }
 
@@ -321,6 +324,10 @@
   function exportJSON(opts) {
     var o = mergeOptions(opts);
     var list = normalize(readRecords());
+    if (readRecords.lastError) {
+      toast('导出失败：' + readRecords.lastError, true);
+      return false;
+    }
 
     if (!list.length) {
       toast('当前没有可导出的账目', true);
@@ -341,6 +348,10 @@
   function exportCSV(opts) {
     var o = mergeOptions(opts);
     var list = normalize(readRecords());
+    if (readRecords.lastError) {
+      toast('导出失败：' + readRecords.lastError, true);
+      return false;
+    }
 
     if (!list.length) {
       toast('当前没有可导出的账目', true);
