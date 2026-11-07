@@ -1,4 +1,4 @@
-# form.js 接入说明（负责人：翁齐文）
+# form.js 接入说明
 
 ## 1. 引入顺序
 
@@ -6,7 +6,7 @@
 
 ```html
 <script src="utils.js"></script>
-<script src="storage.js"></script>   <!-- 梁洪睿，提供 LedgerStorage -->
+<script src="storage.js"></script>   <!-- storage.js，提供 LedgerStorage -->
 <script src="form.js"></script>
 ```
 
@@ -57,7 +57,7 @@ document.addEventListener('ledger:change', function (e) {
 
 `list.js` 重画表格、`stats.js` 重算合计、`chart.js` 重画饼图、`filter.js` 重跑筛选，都挂在这一个事件上即可，互不干扰。
 
-## 5. form.js 的行为（避免与林豪的 HTML 冲突）
+## 5. form.js 的行为（避免与 form.html 冲突）
 
 - 日期默认值用 `LedgerUtils.formatDate()` 取**本地今天**，不用 `toISOString()`（东八区凌晨会差一天）。
 - 切换收支类型时，会自动禁用另一类型的类别选项（支出下「工资」不可选），所以提交的数据不会出现「支出 + 工资」的矛盾。
@@ -76,7 +76,7 @@ LedgerForm.buildRecord(value)      // 组装记录对象
 LedgerForm.categories              // { expense: [...], income: [...] } 给 filter.js 复用
 ```
 
-## 7. 交给薛昌建（style.css）的类名
+## 7. 交给 style.css 的类名
 
 提示区用 `#formTip` 的 `class` 区分状态，样式只需覆盖这两种：
 
